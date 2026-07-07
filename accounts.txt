@@ -1,0 +1,4 @@
+# Mỗi dòng 1 tài khoản theo định dạng: email|mat_khau
+# Xóa các dòng này đi và nhập tài khoản của bạn vào nhé:
+email_test_1@hotmail.com|matkhau123
+email_test_2@outlook.com|matkhau456

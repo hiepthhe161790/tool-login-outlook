@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlook Auto Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <span>Outlook Manager</span>
+            </div>
+            <button id="openAddModalBtn" class="btn primary" style="width: 100%; margin-bottom: 20px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Thêm Tài Khoản
+            </button>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <span class="stat-label">Tổng cộng</span>
+                    <span class="stat-value" id="totalAcc">0</span>
+                </div>
+                <div class="stat-box success">
+                    <span class="stat-label">Đã có Session</span>
+                    <span class="stat-value" id="activeAcc">0</span>
+                </div>
+            </div>
+
+            <!-- Queue Status -->
+            <div class="queue-status" id="queueStatusBox" style="display: none; background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--warning);">
+                <p style="font-size: 0.85rem; color: var(--warning); margin-bottom: 5px;">Hàng đợi Auto Login</p>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 0.8rem;">Đang chạy: <strong id="queueRunning">0</strong></span>
+                    <span style="font-size: 0.8rem;">Đang đợi: <strong id="queueWaiting">0</strong></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div>
+                    <h1>Danh sách Tài Khoản</h1>
+                    <p>Hệ thống tự động đăng nhập và trích xuất session để đọc email không cần mật khẩu.</p>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                    <button id="exportBtn" class="btn outline" style="border-color: #3b82f6; color: #3b82f6;">⬇️ Xuất File (.txt)</button>
+                    <button id="deleteSelectedBtn" class="btn outline" style="display: none; border-color: #ef4444; color: #ef4444;">🗑️ Xóa đã chọn</button>
+                    <button id="runQueueBtn" class="btn success" style="width: auto; padding: 12px 24px;">🚀 Chạy Auto Login</button>
+                </div>
+            </header>
+
+            <div class="filters" style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <input type="text" id="searchEmail" placeholder="🔍 Tìm kiếm Email..." style="flex: 1; padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-family: inherit;">
+                <select id="filterStatus" style="padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-family: inherit; cursor: pointer;">
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="active">Đã có Session (Active)</option>
+                    <option value="error">Lỗi Đăng nhập (Error)</option>
+                    <option value="pending">Chờ chạy ngầm (Pending)</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAll" style="cursor: pointer;"></th>
+                            <th>Email</th>
+                            <th>Proxy</th>
+                            <th>Trạng thái</th>
+                            <th>Lần đăng nhập cuối</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Dữ liệu render bằng JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Thêm Tài Khoản -->
+    <div class="modal-overlay" id="addAccountModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Thêm Hàng Loạt Tài Khoản</h2>
+                <button class="close-btn" id="closeAddModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">Dán danh sách vào đây. Hỗ trợ định dạng: <strong>email|pass</strong> hoặc <strong>email|pass|ip:port:user:pass</strong></p>
+                <textarea id="bulkInput" rows="8" placeholder="email1@hotmail.com|pass1&#10;email2@hotmail.com|pass2|127.0.0.1:8080:user:pass" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-family: inherit; resize: vertical; margin-bottom: 15px; font-size: 0.9rem;"></textarea>
+                <button id="addBulkBtn" class="btn primary" style="width: 100%; padding: 12px;">Lưu Danh Sách</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xem Email -->
+    <div class="modal-overlay" id="emailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Hộp thư đến</h2>
+                <button class="close-btn" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="loadingMails" class="loading-spinner">Đang tải hộp thư... (Mất khoảng 5-10s)</div>
+                <ul id="mailList" class="mail-list" style="display: none;">
+                    <!-- Danh sách mail -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
